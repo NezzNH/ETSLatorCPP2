@@ -313,6 +313,7 @@ bool shuntingYard(Token tokenArray[], int tokenArraySize, Token resultArray[], i
 }
 
 double EvalNormalEq(string expression) {
+
 	int tokenArraySize = 0, resultArraySize = 0, * resultArraySizeP = &resultArraySize;
 	tokenArraySize = returnAmountOfTokens(expression);
 	string* preTokenArray = new string[tokenArraySize];
@@ -338,6 +339,64 @@ double EvalNormalEq(string expression) {
 	delete[] tokensArray;
 	delete[] shuntedArray;
 
+	return result;
+}
+
+string EvalSeries(string expression, bool IsArithemtic) {
+	int arraySize = 0;
+	string buffer, result;
+	double medianArray[2];
+	for (int i = 0; i < expression.length(); i++) if (expression[i] == ',' || expression[i] == ']') arraySize++;
+	double* numargsArray = new double[arraySize];
+	string* argsArray = new string[arraySize];
+
+	for (int i = 1; i < expression.length(); i++) {
+		if ((expression[i] == ',' || expression[i] == ']') && buffer != "") {
+			*argsArray = buffer;
+			buffer = "";
+			*numargsArray = EvalNormalEq(*argsArray);
+			argsArray++;
+			numargsArray++;
+		}
+		else buffer += expression[i];
+	}
+
+	for (int i = 0; i < arraySize; i++) {
+		numargsArray--;
+		argsArray--;
+	}
+	delete[] argsArray;
+
+	if (IsArithemtic) {
+		double sum = 0, differential;
+		double diffCalcArray[2];
+		int diffCalcArrayIndex = 0;
+		bool diffCalculated = false;
+		for (int i = 0; i < arraySize; i++) {
+			sum += *numargsArray;
+			if (diffCalcArrayIndex < 2) {
+				diffCalcArray[diffCalcArrayIndex] = *numargsArray;
+				diffCalcArrayIndex++;
+			}
+			numargsArray++;
+		}
+		differential = diffCalcArray[1] - diffCalcArray[0];
+		for (int i = 0; i < arraySize; i++) numargsArray--;
+		double average = sum / arraySize;
+		float medianIndex = (float)arraySize / 2;
+		for (int i = 0; i < floor(medianIndex); i++) numargsArray++;
+		medianArray[0] = *numargsArray;
+		for (int i = 0; i < floor(medianIndex); i++) numargsArray--;
+		for (int i = 0; i < ceil(medianIndex); i++) numargsArray++;
+		medianArray[1] = *numargsArray;
+		for (int i = 0; i < ceil(medianIndex); i++) numargsArray--;
+
+		result = "This array has a:\nMedian:" + to_string((medianArray[0] + medianArray[1]) / 2) + "\nAverage:" + to_string(average) + "\nEach member is different by:" + to_string(differential);
+	}
+	else {
+		
+	}
+	delete[] numargsArray;
 	return result;
 }
 
@@ -389,25 +448,28 @@ int main() {
 	cin >> ws;
 	getline(cin, expression);
 	expression = deSpaceify(expression);
-
+	
 	switch (optionIndex) {
-	case 0: //normal
-		result = EvalNormalEq(expression);
+	case 0:
+		result = to_string(EvalNormalEq(expression));
 		break;
-	case 1: //square_eq
+	case 1:
 		result = EvalSquare_EQ(expression);
 		break;
 	case 2: //arithmetic array
-
+		result = EvalSeries(expression, true);
+		break;
 	case 3: //geometricarray
 
+	case 4:
+		
 	default:
 		result = "didnt work!";
 		break;
 	}
-
-	cout << setprecision(2) << result << endl;
-
+	
+	cout << result << endl;
+	
 }
 
 //TO-DO:
@@ -415,3 +477,6 @@ int main() {
 //	-truth statements
 //	-serie's
 //implement sin, cos, tg, ctg, pi
+
+
+//reverse polish notaton
