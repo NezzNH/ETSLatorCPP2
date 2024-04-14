@@ -351,7 +351,6 @@ string EvalSquare_EQ(string expression) {
 		else {
 			if (buffer != "") {
 				arguments[argIndex] = buffer;
-				cout << buffer << endl;
 				argIndex++;
 				buffer = "";
 			}
