@@ -9,6 +9,16 @@ using namespace std;
 
 typedef unsigned short us;
 
+/*I need a custom parser for special functions. I hope I can consolidate it all into one simple function.
+  Then, I'll do checks on the expression itself. If I find that one of the exponents is larger than 2 for example in the square equation case,
+  I'll just return an error. Similarly so for other functions
+
+  I also have to implement rejection of invalid arithmetic and geometric series. Shouldn't be too difficult, just a bit of a pain in the ass.
+  Also gotta implement a series constructor for the inverse of analysis of a series.
+  Lastly is to implement all of the analytical geometry eqs, those should do just fine with the same universal complex expression parser.
+  Rejection of invalid expressions is going to be a bit more complicated but I'll try that until Friday. I have plenty of time, but also shit to do so idk.
+*/
+
 const static int OPERATOR_ARR_SIZE = 10;
 const static int EXP_PRO_SIZE = 4;
 const static int EXPRCORRSIZE = 12;
@@ -265,7 +275,7 @@ bool shuntingYard(Token tokenArray[], int tokenArraySize, Token resultArray[], i
 				while (!operatorStack.empty()
 					&& operatorStack.top().returnContents()[0] != '('
 					&& (operatorStack.top().returnPrecedence() > currentToken.returnPrecedence()
-						|| (currentToken.returnPrecedence() == operatorStack.top().returnPrecedence() && currentToken.returnAss() == associativity::LEFT)))
+					|| (currentToken.returnPrecedence() == operatorStack.top().returnPrecedence() && currentToken.returnAss() == associativity::LEFT)))
 				{
 					outputQueue.push(operatorStack.top());
 					operatorStack.pop();
@@ -413,24 +423,52 @@ string EvalSeries(string expression, bool IsArithemtic) {
 	return result;
 }
 
-string EvalSquare_EQ(string expression) {
-	expression += '|';
-	string arguments[5], buffer = "";
-	int argIndex = 0;
-	double numArgs[5];
-	for (int i = 0; i < expression.length(); i++) {
-		if (isdigit(expression[i]) || expression[i] == '(' || expression[i] == ')') buffer += expression[i];
-		else {
-			if (buffer != "") {
-				arguments[argIndex] = buffer;
-				argIndex++;
-				buffer = "";
-			}
+int returnPowerOfExpression(string input) {
+	int varIndex;
+	for (int i = 0; i < input.length(); i++) {
+		if (isalpha(input[i])) {
+			varIndex = i;
+			break;
 		}
 	}
-	for (int i = 0; i < 5; i++) numArgs[i] = EvalNormalEq(arguments[i]);
+	if (varIndex == input.length() - 1) return 1;
+	else return stoi(input.substr(varIndex + 2, input.length() - varIndex - 2));
+}
 
-	if (numArgs[1] > 2) return "Error! Not a valid square equation!";
+string EvalSquare_EQ(string expression) {
+	expression += '|';
+	string arguments[4], buffer = "", varSign = "";
+	int powerIndices[4] = { 2,1,1,1 };
+	int argIndex = 0, currentPower = 0, tempIndex;
+	double numArgs[4];
+	bool writeFlag = false;
+	for (int i = 0; i < expression.length(); i++) {
+		if (argIndex > 1) writeFlag = true;
+		if (isalpha(expression[i])) {
+			writeFlag = true;
+			buffer += expression[i];
+		}
+		else if ((expression[i] == '+' || expression[i] == '-' || expression[i] == '=' || expression[i] == '|') && writeFlag) {
+			arguments[argIndex] = buffer;
+			buffer = "";
+			argIndex++;
+			writeFlag = false;
+		}
+		else buffer += expression[i];
+	}
+	buffer = "";
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < arguments[i].length(); j++) {
+			if (isalpha(arguments[i][j])) {
+				arguments[i] = buffer;
+				buffer = "";
+				break;
+			}
+			else buffer += arguments[i][j];
+		}
+	}
+
+	for (int i = 0; i < 4; i++) numArgs[i] = EvalNormalEq(arguments[i]);
 
 	if (numArgs[4] > 0) {
 		numArgs[3] -= numArgs[4];
@@ -447,13 +485,19 @@ string EvalSquare_EQ(string expression) {
 	return resultString;
 }
 
+string EvalEllipse(string expression) {
+	string result = "Ellipse result placeholder";
+
+	return result;
+}
+
 int main() {
 
 	string expression, result;
 	int optionIndex = EXPRCORRSIZE + 5, dotIndex = 0;
 
-	while (optionIndex > EXPRCORRSIZE) {
-		cout << "Input optionIndex: ";
+	while (optionIndex > 5) {
+		cout << "Input the index of the expression type\n0. Algebra\n1. Square equation\n2. Arithmetic Series\n3. Geometric Series\n4. Ellipse: ";
 		cin >> optionIndex;
 	}
 
@@ -475,16 +519,13 @@ int main() {
 	case 3: //geometricarray
 		result = EvalSeries(expression, false);
 		break;
+	case 4: //ellipse
+		result = EvalEllipse(expression);
+		break;
+	case 5:
+		result = to_string(returnPowerOfExpression(expression));
+		break;
 	}
-
-	for (int i = 0; i < result.length(); i++) {
-		if (result[i] == '.') {
-			dotIndex = i;
-			break;
-		}
-	}
-
-	result = result.substr(0, RESULT_DISP_PRECISION + dotIndex + 1);
 	
 	cout << result << endl;
 	
