@@ -12,6 +12,7 @@ typedef unsigned short us;
 const static int OPERATOR_ARR_SIZE = 10;
 const static int EXP_PRO_SIZE = 4;
 const static int EXPRCORRSIZE = 12;
+const static int RESULT_DISP_PRECISION = 2;
 
 enum class tokenType { OPERATOR, OPERAND, NIL };
 enum class associativity { LEFT, RIGHT };
@@ -361,10 +362,8 @@ string EvalSeries(string expression, bool IsArithemtic) {
 		else buffer += expression[i];
 	}
 
-	for (int i = 0; i < arraySize; i++) {
-		numargsArray--;
-		argsArray--;
-	}
+	numargsArray -= arraySize;
+	argsArray -= arraySize;
 	delete[] argsArray;
 
 	if (IsArithemtic) {
@@ -381,20 +380,34 @@ string EvalSeries(string expression, bool IsArithemtic) {
 			numargsArray++;
 		}
 		differential = diffCalcArray[1] - diffCalcArray[0];
-		for (int i = 0; i < arraySize; i++) numargsArray--;
+		numargsArray -= arraySize;
 		double average = sum / arraySize;
 		float medianIndex = (float)arraySize / 2;
-		for (int i = 0; i < floor(medianIndex); i++) numargsArray++;
+		numargsArray += (int)floor(medianIndex);
 		medianArray[0] = *numargsArray;
-		for (int i = 0; i < floor(medianIndex); i++) numargsArray--;
-		for (int i = 0; i < ceil(medianIndex); i++) numargsArray++;
+		numargsArray -= (int)floor(medianIndex);
+		numargsArray += (int)ceil(medianIndex);
 		medianArray[1] = *numargsArray;
-		for (int i = 0; i < ceil(medianIndex); i++) numargsArray--;
+		numargsArray -= (int)ceil(medianIndex);
 
 		result = "This array has a:\nMedian:" + to_string((medianArray[0] + medianArray[1]) / 2) + "\nAverage:" + to_string(average) + "\nEach member is different by:" + to_string(differential);
 	}
 	else {
+		double product = 1, average, diffArray[2];
+		int diffArrayIndex = 0;
+		for (int i = 0; i < arraySize; i++) {
+			product += *numargsArray;
+			if (diffArrayIndex < 2) {
+				diffArray[diffArrayIndex] = *numargsArray;
+				diffArrayIndex++;
+			}
+			numargsArray++;
+		}
+		numargsArray -= arraySize;
+		average = product / arraySize;
+		double differential = diffArray[1] / diffArray[0];
 		
+		result = "This array has a:\nAverage:" + to_string(average) + "\nDifferential:" + to_string(differential);
 	}
 	delete[] numargsArray;
 	return result;
@@ -437,7 +450,7 @@ string EvalSquare_EQ(string expression) {
 int main() {
 
 	string expression, result;
-	int optionIndex = EXPRCORRSIZE + 5;
+	int optionIndex = EXPRCORRSIZE + 5, dotIndex = 0;
 
 	while (optionIndex > EXPRCORRSIZE) {
 		cout << "Input optionIndex: ";
@@ -460,13 +473,18 @@ int main() {
 		result = EvalSeries(expression, true);
 		break;
 	case 3: //geometricarray
-
-	case 4:
-		
-	default:
-		result = "didnt work!";
+		result = EvalSeries(expression, false);
 		break;
 	}
+
+	for (int i = 0; i < result.length(); i++) {
+		if (result[i] == '.') {
+			dotIndex = i;
+			break;
+		}
+	}
+
+	result = result.substr(0, RESULT_DISP_PRECISION + dotIndex + 1);
 	
 	cout << result << endl;
 	
