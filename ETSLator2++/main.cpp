@@ -9,14 +9,15 @@ using namespace std;
 
 typedef unsigned short us;
 
-/*I need a custom parser for special functions. I hope I can consolidate it all into one simple function.
-  Then, I'll do checks on the expression itself. If I find that one of the exponents is larger than 2 for example in the square equation case,
-  I'll just return an error. Similarly so for other functions
+/*
+I need a custom parser for special functions. I hope I can consolidate it all into one simple function.
+Then, I'll do checks on the expression itself. If I find that one of the exponents is larger than 2 for example in the square equation case,
+I'll just return an error. Similarly so for other functions
 
-  I also have to implement rejection of invalid arithmetic and geometric series. Shouldn't be too difficult, just a bit of a pain in the ass.
-  Also gotta implement a series constructor for the inverse of analysis of a series.
-  Lastly is to implement all of the analytical geometry eqs, those should do just fine with the same universal complex expression parser.
-  Rejection of invalid expressions is going to be a bit more complicated but I'll try that until Friday. I have plenty of time, but also shit to do so idk.
+I also have to implement rejection of invalid arithmetic and geometric series. Shouldn't be too difficult, just a bit of a pain in the ass.
+Also gotta implement a series constructor for the inverse of analysis of a series.
+Lastly is to implement all of the analytical geometry eqs, those should do just fine with the same universal complex expression parser.
+Rejection of invalid expressions is going to be a bit more complicated but I'll try that until Friday. I have plenty of time, but also shit to do so idk.
 */
 
 const static int OPERATOR_ARR_SIZE = 10;
@@ -24,7 +25,7 @@ const static int EXP_PRO_SIZE = 4;
 const static int EXPRCORRSIZE = 12;
 const static int RESULT_DISP_PRECISION = 2;
 
-enum class tokenType { OPERATOR, OPERAND, NIL };
+enum class tokenType { OPERATOR, OPERAND, NIL }; //
 enum class associativity { LEFT, RIGHT };
 enum class ExpressionType { SQUARE_EQ, ARITHMETICARR, GEOMETRICARR, ELLIPSE, SPHERE, HYPERBOLA, LOGICAL, PARABOLA, NORMAL, ERR };
 enum class OPERATOR_TYPE { ADD, SUBTRACT, MULTIPLY, DIVIDE, NIL, POWER, MODULUS, UNARY_MINUS };
@@ -257,8 +258,8 @@ void shoveIntoTokens(Token tokenArray[], string preTokenArray[], int arraySize) 
 		tokenType currentTokenType = returnTokenType(*preTokenArray);
 		string buffer = *preTokenArray;
 		us currentPrecedence = returnPrecedence(buffer[0]);
-		associativity bootycheeks = identifyAss(buffer[0]);
-		*tokenArray = Token(currentTokenType, *preTokenArray, currentPrecedence, bootycheeks);
+		associativity tempAssociativity = identifyAss(buffer[0]);
+		*tokenArray = Token(currentTokenType, *preTokenArray, currentPrecedence, tempAssociativity);
 		tokenArray++;
 		preTokenArray++;
 	}
@@ -496,8 +497,8 @@ int main() {
 	string expression, result;
 	int optionIndex = EXPRCORRSIZE + 5, dotIndex = 0;
 
-	while (optionIndex > 5) {
-		cout << "Input the index of the expression type\n0. Algebra\n1. Square equation\n2. Arithmetic Series\n3. Geometric Series\n4. Ellipse: ";
+	while (optionIndex > 3) {
+		cout << "Input the index of the expression type\n0. Algebra\n1. Square equation\n2. Arithmetic Series\n3. Geometric Series: ";
 		cin >> optionIndex;
 	}
 
@@ -519,11 +520,8 @@ int main() {
 	case 3: //geometricarray
 		result = EvalSeries(expression, false);
 		break;
-	case 4: //ellipse
-		result = EvalEllipse(expression);
-		break;
-	case 5:
-		result = to_string(returnPowerOfExpression(expression));
+	default:
+		result = "Invalid choice Index!";
 		break;
 	}
 	
